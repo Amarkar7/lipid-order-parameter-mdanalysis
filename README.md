@@ -1,6 +1,6 @@
 # Lipid Order Parameter Calculation using MDAnalysis
 
-A Python-based lipid tail order parameter (\(S_{CD}\)) calculation tool using MDAnalysis with strict frame skipping behavior comparable to GROMACS `gmx order`.
+Python-based lipid tail order parameter (SCD) calculation tool using MDAnalysis.
 
 This script computes membrane lipid tail ordering from molecular dynamics trajectories by analyzing the orientation of C–H bonds relative to the membrane normal (Z-axis).
 
@@ -8,53 +8,23 @@ This script computes membrane lipid tail ordering from molecular dynamics trajec
 
 # Features
 
-- Strict stride frame processing
-- GROMACS-like frame skipping behavior
-- Supports separate sn1 and sn2 lipid tails
-- Reads GROMACS `.tpr` and `.xtc`
-- Uses `.ndx` index groups
-- Computes averaged \(S_{CD}\) order parameters
-- Automatic bonded hydrogen detection
-- Distance-based fallback hydrogen search
-- Produces `.xvg` output compatible with plotting tools
+- Strict frame skipping
+- GROMACS-like behavior
+- Supports sn1 and sn2 lipid tails
+- Reads topology and trajectory files
+- Uses index groups
+- Computes averaged lipid order parameters
+- Generates XVG output
 
 ---
 
-# Scientific Background
+# Installation
 
-The deuterium order parameter is defined as:
+Clone repository:
 
-\[
-S_{CD} = \frac{1}{2}(3\cos^2\theta -1)
-\]
-
-Where:
-
-- \(\theta\) = angle between the C–H bond vector and membrane normal
-- \(S_{CD}\) = lipid tail order parameter
-
-Interpretation:
-
-| SCD Value | Meaning |
-|---|---|
-| High positive | Ordered lipid tails |
-| Near zero | Disordered/random |
-| Negative | Perpendicular orientation |
-
-This quantity is commonly compared with NMR experimental measurements.
-
----
-
-# Requirements
-
-## Python
-
-- Python >= 3.8
-
-## Python Packages
-
-- MDAnalysis
-- NumPy
+```bash
+git clone https://github.com/YOUR_USERNAME/lipid-order-parameter-mdanalysis.git
+```
 
 Install dependencies:
 
@@ -64,97 +34,29 @@ pip install -r requirements.txt
 
 ---
 
-# Installation
+# Required Inputs
 
-Clone the repository:
+The script requires:
 
-```bash
-git clone https://github.com/YOUR_USERNAME/lipid-order-parameter-mdanalysis.git
-```
+- topology file
+- trajectory file
+- sn1 index file
+- sn2 index file
 
-Enter the directory:
-
-```bash
-cd lipid-order-parameter-mdanalysis
-```
-
-Install requirements:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# Input Files
-
-## Topology
-
-```text
-step7_production.tpr
-```
-
-## Trajectory
-
-```text
-md_noPBC_1.xtc
-```
-
-## Index files
-
-```text
-sn1.ndx
-sn2.ndx
-```
-
-Each index group should contain equivalent carbon atoms across lipid residues.
-
-Example:
-
-```text
-[ C2 ]
-12 45 78 90
-
-[ C3 ]
-13 46 79 91
-```
+Supported formats depend on MDAnalysis.
 
 ---
 
 # Usage
 
-Basic run:
-
 ```bash
-python3 calc_order_mdanalysis_strict_stride.py
+python3 calc_order_mdanalysis_strict_stride.py \
+    --top topology.tpr \
+    --traj trajectory.xtc \
+    --ndx1 sn1.ndx \
+    --ndx2 sn2.ndx \
+    --stride 100
 ```
-
-Run with stride:
-
-```bash
-python3 calc_order_mdanalysis_strict_stride.py --stride 100
-```
-
-Verbose mode:
-
-```bash
-python3 calc_order_mdanalysis_strict_stride.py --stride 100 --verbose
-```
-
----
-
-# Command Line Options
-
-| Argument | Description |
-|---|---|
-| `--top` | Topology file |
-| `--traj` | Trajectory file |
-| `--ndx1` | sn1 index file |
-| `--ndx2` | sn2 index file |
-| `--out1` | sn1 output |
-| `--out2` | sn2 output |
-| `--stride` | Frame skipping interval |
-| `--verbose` | Detailed logging |
 
 ---
 
@@ -162,12 +64,10 @@ python3 calc_order_mdanalysis_strict_stride.py --stride 100 --verbose
 
 The script generates:
 
-```text
-lipids_sn1_mda.xvg
-lipids_sn2_mda.xvg
-```
+- lipids_sn1_mda.xvg
+- lipids_sn2_mda.xvg
 
-Format:
+Example output:
 
 ```text
 1    0.212
@@ -175,78 +75,25 @@ Format:
 3    0.175
 ```
 
-Where:
+---
 
-- Column 1 = carbon group index
-- Column 2 = averaged order parameter
+# Scientific Background
+
+The order parameter is calculated as:
+
+SCD = 0.5 × (3cos²θ − 1)
+
+where θ is the angle between the C–H bond vector and membrane normal.
+
+Higher values indicate more ordered lipid tails.
 
 ---
 
-# Workflow
+# Notes
 
-1. Load trajectory and topology
-2. Parse lipid tail index groups
-3. Identify hydrogens bonded to carbons
-4. Compute C–H bond vectors
-5. Calculate angle relative to membrane normal
-6. Compute \(S_{CD}\)
-7. Average across:
-   - frames
-   - lipids
-   - hydrogens
-8. Write `.xvg` output
-
----
-
-# Important Notes
-
-- Membrane normal is assumed along the Z-axis
-- Trajectory should be:
-  - centered
-  - rotationally aligned
-  - PBC corrected
-
-Recommended preprocessing using GROMACS:
-
-```bash
-gmx trjconv -pbc mol -center
-```
-
----
-
-# Example Use Cases
-
-- Lipid bilayer simulations
-- Membrane phase analysis
-- Cholesterol ordering studies
-- Protein-membrane interaction studies
-- Comparing ordered vs disordered membranes
-
----
-
-# Performance
-
-The calculation scales approximately with:
-
-```text
-Frames × Lipids × Tail Carbons × Hydrogens
-```
-
-Large trajectories may require significant computational time.
-
----
-
-# Citation
-
-If you use this script in published work, please cite:
-
-## MDAnalysis
-
-Michaud-Agrawal et al., J Comput Chem. 2011.
-
-## GROMACS
-
-Abraham et al., SoftwareX. 2015.
+- Membrane normal is assumed along Z-axis
+- Trajectory should ideally be PBC corrected
+- Large trajectory files are intentionally excluded from this repository
 
 ---
 
